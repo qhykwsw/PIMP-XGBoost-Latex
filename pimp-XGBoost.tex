@@ -116,9 +116,11 @@ Financial distress prediction is a key issue in measuring corporate solvency. It
 
 The initial financial distress forecasting models were based on statistical analysis, mainly including multiple discriminant analysis (MDA) \citep{Altman1968, Altman1977, casey1984corporate} and logistic regression (LR) \citep{Altman2007, Ohlson1980, Pantalone1987}. Although these models have been widely used, these statistical techniques often violate some assumptions in practice. Such as the assumption of multivariate normality of independent variables, which limits the predictive power of the models\citep{Begley1996}.
 
-With the rapid development of machine learning techniques, intelligent techniques such as artificial neural network (ANN) \citep{Adisa2019, Atiya2001, West2000}, support vector machine (SVM) \citep{Ding2008, Fallahpour2017}, decision tree (DT) \citep{Khemakhem2018, Sun2008}, random forest (RF) \citep{Barboza2017, Teles2020}, and gradient boosting decision tree (GBDT) \citep{Son2019, Wyrobek2019, Xia2017}, have also been applied to the field of financial distress prediction. Compared with traditional statistical techniques, machine learning does not assume a certain data distribution and can automatically extract knowledge from training samples. Many recent studies have shown that higher accuracy has been obtained based on ensemble learning techniques \citep{Alaka2018, Nanni2009, RaviKumar2007}.
+With the rapid development of machine learning techniques, intelligent techniques such as artificial neural network (ANN) \citep{Adisa2019, Atiya2001, West2000}, support vector machine (SVM) \citep{Ding2008, Fallahpour2017}, decision tree (DT) \citep{Khemakhem2018, Sun2008}, random forest (RF) \citep{Barboza2017, Teles2020}, and gradient boosting decision tree (GBDT) \citep{Son2019, Wyrobek2019, Xia2017, Zieba2016}, have also been applied to the field of financial distress prediction. Compared with traditional statistical techniques, machine learning does not assume a certain data distribution and can automatically extract knowledge from training samples. Many recent studies have shown that higher accuracy has been obtained based on ensemble learning techniques \citep{Alaka2018, Nanni2009, RaviKumar2007}.
 
-But there is still no overall optimal machine learning method for financial distress prediction \citep{Alaka2018}, one of the reasons is that interpretable machine learning methods, such as DT, do not significantly outperform traditional statistical methods in terms of accuracy. Meanwhile, ensemble learning methods with higher accuracy, such as RF or GBDT, are not inherently interpretable and difficult to use in practice. Although there have been previous studies using feature importance to improve the interpretability of the model \citep{Huang2004, Son2019, Wyrobek2019, Xia2017}. However, this kind of method is proved to be biased. When some features have high noise or collinearity, the feature importance result given by RF or other tree models does not match the actual value \citep{Altmann2010}. The contribution of this paper is to propose a modified feature importance ranking method based on the permutation importance and combined it with the gradient boosting tree model. It not only improves the accuracy of financial distress forecasting but also improves the interpretability of the model.
+But there is still no overall optimal machine learning method for financial distress prediction \citep{Alaka2018}, one of the reasons is that interpretable machine learning methods, such as DT, do not significantly outperform traditional statistical methods in terms of accuracy. Meanwhile, ensemble learning methods with higher accuracy, such as RF or GBDT, are not inherently interpretable and difficult to use in practice. Although there have been previous studies using feature importance to improve the interpretability of the model \citep{Huang2004, Son2019, Wyrobek2019, Xia2017}. However, this kind of method is proved to be biased. When some features have high noise or collinearity, the feature importance result given by RF or other tree models does not match the actual value \citep{Altmann2010}.
+
+The contribution of this paper is to propose a corrected feature importance ranking method based on the permutation importance and combined it with the gradient boosting tree model. The whole modeling process includes data preprocessing, feature selection, model training, and evaluation. Previous studies have also applied GBDT to financial distress prediction. However, some of them ignored feature selection \citep{Son2019, Wyrobek2019}, and some did not highlight interpretability \citep{Zieba2016}. Our experimental results show that proper feature selection has a positive effect on the performance of GBDT. It not only improves the accuracy of financial distress forecasting but also improves the interpretability of the model.
 
 The rest of the paper is organized as follows. \hyperref[section_2]{Section 2} provides the theoretical background of the implemented gradient boosting decision tree model and explains the permutation importance method. \hyperref[section_3]{Section 3} presents our improved financial distress prediction model, namely PIMP-XGBoost. \hyperref[section_4]{Section 4} shows the design details of the experiments. \hyperref[section_5]{Section 5} presents the feature importance ranking results, and then gives the comparison and interpretation of the results of each model. \hyperref[section_6]{Section 6} gives the conclusion.
 
@@ -173,9 +175,9 @@ Permutation importance (PIMP) is a heuristic method used to correct the feature 
 The PIMP specific steps are as follows:
 \renewcommand{\theenumi}{\roman{enumi}}
 \begin{enumerate}
-    \item Create null importances distribution: These are created by running the fit model multiple times on a shuffle version of the target. This shows how the model can fit a feature without considering the target.
+    \item Create null importances distribution. These are created by running the fit model multiple times on a shuffle version of the target. This shows how the model can fit a feature without considering the target.
     \item Fit the model on the original target and collect the actual feature importance. This gives a benchmark whose significance can be tested against the null importances distribution.
-    \item Calculate the degree of difference between actual importance and null importances distribution. Instead of using a complex approach in the original paper\footnote{The original paper fits a probability distribution to the population of null importances, which the user can choose from the following: Gaussian, lognormal or gamma. Maximum likelihood estimators of the parameters of the selected distribution are computed. Given the fitted distribution, the probability of observing a relevance of $v$ or higher using the true response vector can be computed (PIMP \textit{P}-value).}, we use a simple method. Three-quarters of the null importances distribution is used as an overall estimate. Specifically, we use the log value of the actual feature importance divided by the 75 percentile of null importances distribution to score features (formula \ref{equ_1}). This will give a sense of the modified feature importance that allows seeing the main features in the data set. 75 percentile is an empirical value. Other quantiles like 50, 95, 99, was also tried and found little effect on the final ranking of feature importance. A small number of features have changed slightly in the rankings, but the overall trend is unchanged.
+    \item Calculate the degree of difference between actual importance and null importances distribution. Instead of using a complex approach in the original paper\footnote{The original paper fits a probability distribution to the population of null importances, which the user can choose from the following: Gaussian, lognormal or gamma. Maximum likelihood estimators of the parameters of the selected distribution are computed. Given the fitted distribution, the probability of observing a relevance of $v$ or higher using the true response vector can be computed (PIMP \textit{P}-value).}, three-quarters of the null importances distribution is used as an overall estimate. Specifically, the log value of the actual feature importance divided by the 75 percentile of null importances distribution is used to score features (formula \ref{equ_1}). This will give a sense of the modified feature importance that allows seeing the main features in the data set. 75 percentile is an empirical value. Other quantiles like 50, 95, 99, was also tried and found little effect on the final ranking of feature importance. A small number of features have changed slightly in the rankings, but the overall trend is unchanged.
     \begin{equation} \label{equ_1}
         score_{PIMP} = log \frac{1^{-10} + Importance_{actual}}{1 + percentile(Importance_{null}, 75)} \footnote{Actual importance can be zero, to avoid log of zero, $1^{-10}$ is added to the numerator. For similar reason, 1 is added to the denominator to avoid division by zero.}
     \end{equation}
@@ -210,7 +212,7 @@ There are some missing values in the initial dataset, which need to be pre-proce
 
 Feature selection ensures a fair comparison between the different methods, as benchmark models such as SVM and ANN are highly dependent on feature selection. RF can be a wrapper method that output the importance score of features, which is the metric to select feature subset. To make the whole process faster, LightGBM's ``rf'' mode is used. LightGBM offers two optional feature importance score standards: ``split'' and ``gain''. Specifically, ``split'' indicates the number of times a feature is used for segmentation; ``gain'' is the total reduction in error when a feature is used for segmentation, and the feature with a high importance score is regarded as a key variable. After using the RF wrapper method to obtain actual importance, PIMP is applied to obtain the distribution of null importances, which is further ranked for feature importance by comparing it with the actual importance. To discard useless features, different feature importance thresholds (top 5\%, 10\% ... 95\%, 100\%) are set to constitute the feature subsets. Afterward, 10 fold cross-validation is calculated respectively to select the best feature subset.
 
-The initial parameter settings of the RF wrapper method have a non-trivial impact on the relevance importance of the features. We follow the default settings for most parameters: learning rate = 0.1, subsample = 1 and colsample bytree = 1. Regarding the max tree depth, empirical results show that the max tree depth set to $0.2*N_{feature}$ performs better. Here, $N_{feature}$ refers to the number of features which is 44 in this paper. So max tree depth is set to 9.
+The initial parameter settings of the RF wrapper method have a non-trivial impact on the relevance importance of the features. The default settings for most parameters were followed: learning rate = 0.1, subsample = 1 and colsample bytree = 1. Regarding the max tree depth, empirical results show that the max tree depth set to $0.2*N_{feature}$ performs better. Here, $N_{feature}$ refers to the number of features which is 44 in this paper. So max tree depth is set to 9.
 
 \textbf{Step 3.} Model training
 
@@ -234,7 +236,7 @@ The sample data used in this paper came from the RESSET database\footnote{\url{h
 
 The period covered by the sample data of companies in financial distress is from 2001 to 2019. During this period, there were 4,167 listed companies on the Shanghai and Shenzhen exchanges, of which 716 had been in financial distress at least once and 3,451 had never been in financial distress. Some companies may have been marked as distress several times during the period, so the entire distressed samples are more than the number of companies. In order not to let the unbalanced dataset affect the performance of the model, a dataset with an equal number of positive and negative samples is constructed by using all financial distress samples and randomly selecting an equal number of normal company samples. The sample composition of the T-1, T-2, and T-3 dataset is shown in Table \ref{table: Statistics}.
 
-\begin{table}[H]
+\begin{table}[H]\footnotesize
     \centering
     \caption{Statistics of datasets used in this paper}
     \label{table: Statistics}
@@ -280,7 +282,7 @@ Reasonable comparison of models requires the use of appropriate evaluation crite
 
 The confusion matrix consisting of TP, TN, FP, and FN in these formulas is shown in table \ref{table: 2}. Where TP and TN represent the numbers of correctly classified normal and financially distressed companies, respectively. FP and FN denote the numbers of misclassified normal and financially distressed companies, respectively.
 
-\begin{table}[H]
+\begin{table}[H]\footnotesize
     \centering
     \caption{The confusion matrix.}
     \label{table: 2}
@@ -311,28 +313,43 @@ The AUC measures how well the model distinguishes between financially distressed
 Feature selection involves three steps. First of all, according to the experience of previous studies in China \citep{Chen2013, Sun2020, Zhu2019} and considering the multiple dimensions that affect the company's financial situation, 44 financial ratios are selected as initial characteristics. Second, the RF wrapper method is used to rank the importance of all the original features. Finally, the results obtained from the RF wrapper method are corrected by PIMP, and the optimal feature subset is selected to construct the financial distress prediction model.
 
 \subsubsection{Initial features}
-To construct the dataset of the empirical study, we take into account the use situation in the previous studies, the complete coverage of business operation, and the availability of data based on qualitative analysis. A preliminary selection of 44 financial indicators, including profitability, solvency, growth ability, operating ability, cash flow ability, and capital structure, as shown in Table \ref{table: 3}.
+To construct the dataset of the empirical study, the use situation in the previous studies, the complete coverage of business operation, and the availability of data based on qualitative analysis were taken into account. A preliminary selection of 44 financial indicators, including profitability, solvency, growth ability, operating ability, cash flow ability, and capital structure, as shown in Table \ref{table: 3}.
 
-\begin{table}[H]
+\begin{table}[H]\footnotesize
     \centering
     \caption{Initial financial indicators.}
     \label{table: 3}
-    \begin{tabular}{p{90pt}p{370pt}}
-    \midrule Types &
-      Variables and financial indicators \\
-    \midrule Profitability &
-      V1: Return On Equity, V2: Return On Assets, V3: Net Profit Ratio, V4: Net Profit To Total Operation Income, V5: Operating Profit To Total Operation Income, V6: Operating Profit Ratio, V7: Total Profit Cost Ratio \\
-    \midrule Solvency &
-      V8: Current Ratio, V9: Quick Ratio, V10: Equity To Interest Bear Debt, V11: Debt Tangible Equity Ratio, V12: Tangible Asset To Interest Bear Debt, V13: Tangible Asset To Net Debt, V14: Net Asset Liability Ratio, V15: Net Liability Ratio \\
-    \midrule Growth ability &
-      V16: Operating Income Grow Rate, V17: Net Profit Grow Rate, V18: Net Operation Cash Flow Growth Rate, V19: Operation Cash Per Share Grow Rate, V20: Cash Increase Year Over Year, V21: Total Asset Year To Date Grow Rate \\
-    \midrule Operating capacity &
-      V22: Inventory Turning Rate, V23: Receivables Turnover Ratio, V24: Accrued Payable Rate, V25: Equity Rate, V26: Net Operating Cycle, V27: Working Capital Total Rate \\
-    \midrule Cash flow ability &
-      V28: Sales And Service Cash To Operating Income, V29: Cash Rate of Sales, V30: Operating Net Cash Flow To Operating Net Income, V31: Operating Income Cash Coverage, V32: Net Operating Cash Flow Ratio, V33: Net Investment Cash Flow Ratio, V34: Net Financial Cash Flow Ratio, V35: Net Operating Cash Flow To Total Operating Revenue \\
-    \midrule Structural ratios &
-        V36: Debt To Asset Ratio, V37: Current Asset To Total Asset, V38: Noncurrent Asset To Total Asset, V39: Intangible Asset Ratio, V40: Equity To Total Capital, V41: Interest Bear Debt To Total Capital, V42: Debt To Long Capital Ratio, V44: Capital Fixed Ratio \\
-    \bottomrule
+    \begin{tabular}{llll}
+    \hline
+    \multicolumn{4}{c}{Profitability} \\ \hline
+    V1 & Return on Equity & V2 & Return On Assets \\
+    V3 & Net Profit Ratio & V4 & Net Profit To Total Operation Income \\
+    V5 & Operating Profit To Total Operation Income & V6 & Operating Profit Ratio \\
+    V7 & Total Profit Cost Ratio &  &  \\ \hline
+    \multicolumn{4}{c}{Solvency} \\ \hline
+    V8 & Current Ratio & V9 & Quick Ratio \\
+    V10 & Equity To Interest Bear Debt & V11 & Debt Tangible Equity Ratio \\
+    V12 & Tangible Asset To Interest Bear Debt & V13 & Tangible Asset To Net Debt \\
+    V14 & Net Asset Liability Ratio & V15 & Net Liability Ratio \\ \hline
+    \multicolumn{4}{c}{Growth ability} \\ \hline
+    V16 & Operating Income Grow Rate & V17 & Net Profit Grow Rate \\
+    V18 & Net Operation Cash Flow Growth Rate & V19 & Operation Cash Per Share Grow Rate \\
+    V20 & Cash Increase Year Over Year & V21 & Total Asset Year To Date Grow Rate \\ \hline
+    \multicolumn{4}{c}{Operating capacity} \\ \hline
+    V22 & Inventory Turning Rate & V23 & Receivables Turnover Ratio \\
+    V24 & Accrued Payable Rate & V25 & Equity Rate \\
+    V26 & Net Operating Cycle & V27 & Working Capital Total Rate \\ \hline
+    \multicolumn{4}{c}{Cash flow ability} \\ \hline
+    V28 & Sales And Service Cash To Operating Income & V29 & Cash Rate of Sales \\
+    V30 & Operating Net Cash Flow To Operating Net Income & V31 & Operating Income Cash Coverage \\
+    V32 & Net Operating Cash Flow Ratio & V33 & Net Investment Cash Flow Ratio \\
+    V34 & Net Financial Cash Flow Ratio & V35 & Net Operating Cash Flow To Total Operating Revenue \\ \hline
+    \multicolumn{4}{c}{Structural ratios} \\ \hline
+    V36 & Debt To Asset Ratio & V39 & Current Asset To Total Asset \\
+    V38 & Noncurrent Asset To Total Asset & V41 & Intangible Asset Ratio \\
+    V40 & Equity To Total Capital & V43 & Interest Bear Debt To Total Capital \\
+    V42 & Equity Multiplier & V45 & Debt To Long Capital Ratio \\
+    V44 & Capital Fixed Ratio &  &  \\ \hline
     \end{tabular}
 \end{table}
 
@@ -405,7 +422,7 @@ Using the RF wrapper method alone or in combination with the PIMP will both resu
 
 Through the importance of features, the degree of contribution of the company's various capability dimensions to the task of predicting financial distress can also be discovered. Table \ref{table: company ability} shows the number of occurrences of the features in the optimal feature subset in each company's capability dimension and the average value of the PIMP feature importance in the ``split'' model. According to the average feature importance (AVGIMP) of each company's capability dimension, the company's profitability feature is the most important for predicting financial distress with T-1, T-2, and T-3 data. The features of growth ability are of little importance to T-1 data, but for T-2 and T-3 data, the importance is second only to profitability.
 
-\begin{table}[H]
+\begin{table}[H]\footnotesize
     \centering
     \caption{Feature counts and average importance for each category. AVGIMP is the average value of the PIMP feature importance in the ``split'' model.}
     \label{table: company ability}
@@ -451,7 +468,7 @@ Besides, with the increase of predicted years, the accuracy of T-1, T-2 and T-3 
 
 Table \ref{Classification results 1} - \ref{Classification results 3} show all the comparative details of accuracy, precision, recall, f1 and AUC of each model. PIMP-XGBoost had the best performance, with AUC of 92.91\%, 88.97\%, and 85.01\% on the T-1, T-2, and T-3 dataset, respectively, all exceeding other baseline models. Compared with the commonly used LR model, the AUC results of XGBoost improved by 6.40\%, 6.02\%, and 6.85\%, respectively.
 
-\begin{table}[H]
+\begin{table}[H]\footnotesize
     \centering
     \caption{Classification results of T-1 dataset for 10 models using 10 fold cross validation.}
     \label{Classification results 1}
@@ -472,7 +489,7 @@ Table \ref{Classification results 1} - \ref{Classification results 3} show all t
     \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[H]\footnotesize
     \centering
     \caption{Classification results of T-2 dataset for 10 models using 10 fold cross validation.}
     \label{Classification results 2}
@@ -493,7 +510,7 @@ Table \ref{Classification results 1} - \ref{Classification results 3} show all t
     \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[H]\footnotesize
     \centering
     \caption{Classification results of T-3 dataset for 10 models using 10 fold cross validation.}
     \label{Classification results 3}
