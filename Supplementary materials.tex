@@ -1,0 +1,197 @@
+% Template for producing ESWA-format journal articles using LaTeX
+% Written by Miha Ravber
+% Programming methodologies laboratory
+% Faculty of Electrical Engineering and Computer Science
+% University of Maribor
+% Koroška cesta 46, 2000 Maribor
+% E-mail: miha.ravber@um.si
+% WWW: https://lpm.feri.um.si/en/members/ravber/
+% Created: November 20, 2020 by Miha Ravber
+% Modified: November 20, 2020 by Miha Ravber
+% Use at your own risk :)
+% Please submit your issues on the github page: https://github.com/Ravby/eswa-template
+
+
+\documentclass[review]{elsarticle}
+\graphicspath{ {./} }
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{verbatim} %comments
+\usepackage{apalike}
+\usepackage{mathtools}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[normalem]{ulem}
+\useunder{\uline}{\ul}{}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{geometry}
+    \geometry{
+    a4paper,
+    total={170mm,257mm},
+    left=20mm,
+    top=20mm,
+}
+
+\restylefloat{figure}
+\restylefloat{table}
+
+\journal{Expert Systems with Applications}
+
+% For ESWA journal you need to use APA style
+\bibliographystyle{model5-names}\biboptions{authoryear}
+
+
+\begin{document}
+
+
+\section{Supplementary materials}
+\subsection{Hyperparameters of Models}
+\subsubsection{Logistic regression}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    solver & newton-cg \\ \hline
+    penalty & none \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Artificial neural network}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    hidden\_layer\_sizes & (64, 64) \\ \hline
+    batch\_size & 64 \\ \hline
+    learning\_rate\_init & 0.001 \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Support vector machine}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    kernel & poly \\ \hline
+    degree & 4 \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Decision tree}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    criterion & gini \\ \hline
+    max\_depth & 7 \\ \hline
+    min\_samples\_split & 5 \\ \hline
+    min\_samples\_leaf & 0.05 \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Bagging}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    max\_features & 0.5 \\ \hline
+    max\_samples & 1 \\ \hline
+    n\_estimators & 660 \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{AdaBoost}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    n\_estimators & 200 \\ \hline
+    learning\_rate & 0.1 \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Random forest}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    n\_estimators & 180 \\ \hline
+    max\_depth & 16 \\ \hline
+    min\_samples\_split & 5 \\ \hline
+    min\_samples\_leaf & 1 \\ \hline
+    max\_features & 3 \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Gradient boosting decision tree}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    n\_estimators & 1500 \\ \hline
+    learning\_rate & 0.01 \\ \hline
+    max\_depth & 11 \\ \hline
+    min\_samples\_split & 10 \\ \hline
+    min\_samples\_leaf & 2 \\ \hline
+    max\_features & 8 \\ \hline
+    the others & default in scikit-learn package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{XGBoost}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    n\_estimators & 900 \\ \hline
+    learning\_rate & 0.01 \\ \hline
+    max\_depth & 9 \\ \hline
+    colsample\_bytree & 0.5 \\ \hline
+    subsample & 0.8 \\ \hline
+    gamma & 0.2 \\ \hline
+    reg\_alpha & 0.01 \\ \hline
+    reg\_lambda & 1 \\ \hline
+    the others & default in XGBoost package \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{LightGBM}
+
+\begin{table}[H]
+    \begin{tabular}{|m{9em}|m{14em}|}
+    \hline
+    \textbf{Parameters} & \textbf{Values} \\ \hline
+    n\_estimators & 700 \\ \hline
+    learning\_rate & 0.01 \\ \hline
+    max\_depth & 7 \\ \hline
+    num\_leaves & 50 \\ \hline
+    max\_bin & 100 \\ \hline
+    min\_child\_samples & 30 \\ \hline
+    min\_child\_weight & 0.001 \\ \hline
+    colsample\_bytree & 0.8 \\ \hline
+    subsample & 0.8 \\ \hline
+    reg\_alpha & 1 \\ \hline
+    reg\_lambda & 0.7 \\ \hline
+    the others & default in LightGBM package \\ \hline
+    \end{tabular}
+\end{table}
+
+\end{document}

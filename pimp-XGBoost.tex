@@ -1,0 +1,576 @@
+% Template for producing ESWA-format journal articles using LaTeX
+% Written by Miha Ravber
+% Programming methodologies laboratory
+% Faculty of Electrical Engineering and Computer Science
+% University of Maribor
+% Koroška cesta 46, 2000 Maribor
+% E-mail: miha.ravber@um.si
+% WWW: https://lpm.feri.um.si/en/members/ravber/
+% Created: November 20, 2020 by Miha Ravber
+% Modified: November 20, 2020 by Miha Ravber
+% Use at your own risk :)
+% Please submit your issues on the github page: https://github.com/Ravby/eswa-template
+
+
+\documentclass[review]{elsarticle}
+\graphicspath{ {./} }
+\usepackage[colorlinks, linkcolor=red, anchorcolor=blue, citecolor=green]{hyperref}
+\usepackage{float}
+\usepackage{verbatim} %comments
+\usepackage{apalike}
+\usepackage{mathtools}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[normalem]{ulem}
+\useunder{\uline}{\ul}{}
+\usepackage{amssymb}
+
+\usepackage{geometry}
+    \geometry{
+    a4paper,
+    total={170mm,257mm},
+    left=20mm,
+    top=20mm,
+}
+
+\restylefloat{figure}
+\restylefloat{table}
+
+\journal{Expert Systems with Applications}
+
+% For ESWA journal you need to use APA style
+\bibliographystyle{model5-names}\biboptions{authoryear}
+
+
+\begin{document}
+\begin{frontmatter}
+
+
+\begin{titlepage}
+\begin{center}
+\vspace*{1cm}
+
+\textbf{ \large Financial distress prediction based on gradient boosted decision tree combined with a corrected feature importance measure}
+
+\vspace{1.5cm}
+
+% Author names and affiliations
+Hongyi Qian$^{a}$ (qianhongyi@buaa.edu.cn), You Song$^b$ (songyou@buaa.edu.cn), Baohui Wang$^b$ (wangbh@buaa.edu.cn), Songfeng Gao$^c$ (gaosongfeng@chamc.com.cn), Minghe Yuan$^c$ (yuanminghe.chamc.com.cn) \\
+
+\hspace{10pt}
+
+\begin{flushleft}
+\small
+$^a$ School of Computer Science and Engineering, Beihang University, Beijing 100191, PR China \\
+$^b$ School of Software, Beihang University, Beijing 100191, PR China \\
+$^c$ HuaRong RongTong (Beijing) Technology Co., Ltd, Beijing 100033, PR China
+
+\vspace{1cm}
+\textbf{Corresponding Author:} \\
+You Song \\
+School of Software, Beihang University, Beijing 100191, PR China \\
+Email: songyou@buaa.edu.cn
+
+
+\end{flushleft}
+\end{center}
+\end{titlepage}
+
+\title{Financial distress prediction based on gradient boosted decision tree combined with a corrected feature importance measure}
+
+\author[label1]{Hongyi Qian}
+\ead{qianhongyi@buaa.edu.cn}
+
+\author[label2]{You Song \corref{cor1}}
+\ead{songyou@buaa.edu.cn}
+
+\author[label2]{Baohui Wang}
+\ead{wangbh@buaa.edu.cn}
+
+\author[label3]{Songfeng Gao}
+\ead{gaosongfeng@chamc.com.cn}
+
+\author[label3]{Minghe Yuan}
+\ead{yuanminghe@chamc.com.cn}
+
+\cortext[cor1]{Corresponding author.}
+\address[label1]{School of Computer Science and Engineering, Beihang University, Beijing 100191, PR China}
+\address[label2]{School of Software, Beihang University, Beijing 100191, PR China}
+\address[label3]{HuaRong RongTong (Beijing) Technology Co., Ltd, Beijing 100033, PR China}
+
+\begin{abstract}
+Corporate financial distress prediction research has been going on for more than half a century, during which many models have emerged, including statistical models and machine learning models. But few machine learning models have been applied to the business world. The main reason is that the predictive accuracy of interpretable machine learning models, such as decision trees, does not significantly exceed that of statistical learning models. Higher precision machine learning models, such as ensemble learning methods, are less interpretable. There have been some studies on calculating feature importance to improve the interpretability of models, but most of these methods are biased and may not reflect the true importance of features. To solve this problem, a heuristic algorithm based on permutation importance (PIMP) is used to modify the biased feature importance measure. The algorithm ranks and filters the features used by machine learning models, which not only improves the accuracy but also makes the results more interpretable. Based on financial data from 4167 listed companies in China between 2001 and 2019, the experiment shows that compared with the traditional statistical learning models and other machine learning models, the proposed PIMP-XGBoost has higher prediction accuracy and clearer interpretation, which is suitable for commercial use.
+\end{abstract}
+
+\begin{keyword}
+Financial distress prediction \sep Gradient boosted decision tree \sep Feature importance \sep Permutation importance \sep Machine learning
+\end{keyword}
+
+\end{frontmatter}
+
+\section{Introduction}
+\label{introduction}
+
+Financial distress prediction is a key issue in measuring corporate solvency. Its main objective is to distinguish normal companies from those at risk of financial distress. For enterprises themselves, financial distress prediction can help them to identify risks early, make plans according to the actual situation, and adjust business strategy. For investors, financial distress prediction can help them find out the financial risks of enterprises and choose investment projects reasonably according to their risk preferences. For regulators, financial distress prediction can help them timely understand the financial status of each company, do a good job in supervision and management, and maintain the stability of the financial market. Therefore, how to predict the financial distress of enterprises effectively has become a hot topic in academic and business circles\citep{Alaka2015, Altman2017, Qu2019}.
+
+The initial financial distress forecasting models were based on statistical analysis, mainly including multiple discriminant analysis (MDA) \citep{Altman1968, Altman1977, casey1984corporate} and logistic regression (LR) \citep{Altman2007, Ohlson1980, Pantalone1987}. Although these models have been widely used, these statistical techniques often violate some assumptions in practice. Such as the assumption of multivariate normality of independent variables, which limits the predictive power of the models\citep{Begley1996}.
+
+With the rapid development of machine learning techniques, intelligent techniques such as artificial neural network (ANN) \citep{Adisa2019, Atiya2001, West2000}, support vector machine (SVM) \citep{Ding2008, Fallahpour2017}, decision tree (DT) \citep{Khemakhem2018, Sun2008}, random forest (RF) \citep{Barboza2017, Teles2020}, and gradient boosting decision tree (GBDT) \citep{Son2019, Wyrobek2019, Xia2017}, have also been applied to the field of financial distress prediction. Compared with traditional statistical techniques, machine learning does not assume a certain data distribution and can automatically extract knowledge from training samples. Many recent studies have shown that higher accuracy has been obtained based on ensemble learning techniques \citep{Alaka2018, Nanni2009, RaviKumar2007}.
+
+But there is still no overall optimal machine learning method for financial distress prediction \citep{Alaka2018}, one of the reasons is that interpretable machine learning methods, such as DT, do not significantly outperform traditional statistical methods in terms of accuracy. Meanwhile, ensemble learning methods with higher accuracy, such as RF or GBDT, are not inherently interpretable and difficult to use in practice. Although there have been previous studies using feature importance to improve the interpretability of the model \citep{Huang2004, Son2019, Wyrobek2019, Xia2017}. However, this kind of method is proved to be biased. When some features have high noise or collinearity, the feature importance result given by RF or other tree models does not match the actual value \citep{Altmann2010}. The contribution of this paper is to propose a modified feature importance ranking method based on the permutation importance and combined it with the gradient boosting tree model. It not only improves the accuracy of financial distress forecasting but also improves the interpretability of the model.
+
+The rest of the paper is organized as follows. \hyperref[section_2]{Section 2} provides the theoretical background of the implemented gradient boosting decision tree model and explains the permutation importance method. \hyperref[section_3]{Section 3} presents our improved financial distress prediction model, namely PIMP-XGBoost. \hyperref[section_4]{Section 4} shows the design details of the experiments. \hyperref[section_5]{Section 5} presents the feature importance ranking results, and then gives the comparison and interpretation of the results of each model. \hyperref[section_6]{Section 6} gives the conclusion.
+
+
+\section{Methodology}
+\label{section_2}
+\subsection{Gradient boosting decision tree}
+Gradient boosting decision tree (GBDT) is considered to be one of the best-performing methods in machine learning and is one of the boosting algorithms, consisting of multiple Classification and regression trees (CART) \citep{Friedman2001}. The core of GBDT is to accumulate the results of all trees as the final result. In each iteration, GBDT will fit a new regression tree in the direction of the gradient of the last residual reduction, which will continuously reduce the residual. The specific process is shown in algorithm \ref{alg:gbdt}.
+
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \caption{Gradient Boosting.} %算法名字
+    \KwIn{training set $\left\{\left(x_{i}, y_{i}\right)\right\}_{i-1}^{n},$ a differentiable loss function $L(y, F(x)),$ number of iterations $M$.} %输入参数
+
+    1. Initialize model with a constant value:
+    $$
+    F_{0}(x)=\underset{\gamma}{\arg \min } \sum_{i=1}^{n} L\left(y_{i}, \gamma\right)
+    $$
+
+    2. \For{$m=1$ to $M$}{
+        (1) Compute so-called pseudo-residuals:
+        $$
+        r_{i m}=-\left[\frac{\partial L\left(y_{i}, F\left(x_{i}\right)\right)}{\partial F\left(x_{i}\right)}\right]_{F(x)=F_{m-1}(x)} \quad \text { for } i=1, \ldots, n .
+        $$
+
+        (2) Fit a base learner (or weak learner, e.g. tree) $h_{m}(x)$ to pseudo-residuals, i.e. train it using the training set $\left\{\left(x_{i}, r_{i m}\right)\right\}_{i=1}^{n}$.
+
+        (3) Compute multiplier $\gamma_{m}$ by solving the following one-dimensional optimization problem:
+        $$
+        \gamma_{m}=\underset{\gamma}{\arg \min } \sum_{i=1}^{n} L\left(y_{i}, F_{m-1}\left(x_{i}\right)+\gamma h_{m}\left(x_{i}\right)\right)
+        $$
+
+        (4) Update the model:
+        $$
+        F_{m}(x)=F_{m-1}(x)+\gamma_{m} h_{m}(x)
+        $$
+    }
+    \KwOut{$F_{M}(x)$}
+    \label{alg:gbdt}
+\end{algorithm}
+
+
+Extreme Gradient Boosting (XGBoost) \citep{Chen2016} is a improvement and extension to GBDT. Compared with the GBDT algorithm, XGBoost has the following advantages: it performs second-order Taylor expansion on loss function, which makes solving the optimal solution more efficient; Regular terms are added to the objective function, and the complexity of each regression tree is punished, so the model can better avoid the overfitting problem. However, XGBoost uses a precise greedy algorithm, which needs to traverse the entire training data several times in each iteration. Although this can find the exact division condition, it's computation-intensive, takes up a lot of memory, and is easy to overfit. The XGBoost level-wise iteration method may result in unnecessary leave nodes, making the algorithm inefficient.
+
+In response to these shortcomings of XGBoost, Microsoft proposed Light Gradient Boosting Machine (LightGBM) \citep{Ke2017} in 2017. LightGBM uses a histogram-based decision tree algorithm, leaf-wise leaf growth strategy with depth restrictions, histogram difference acceleration, and several other techniques. Compared to the XGBoost algorithm, the LightGBM data separation is less complex, faster, and takes up less memory. Both XGBoost and LightGBM are currently extremely high-performing algorithms with many advantages that common machine learning algorithms do not have, and are still rarely used in research on financial distress prediction.
+
+\subsection{Permutation importance}
+In financial distress prediction tasks, the interpretability of machine learning models is as important as their predictive accuracy. Linear models are probably the most commonly used method for evaluating feature correlations, despite their relative inflexibility. For highly complex or non-parametric models, such as RF models, effective feature correlation estimators already exist. However, RF models have biases in feature selection, for example, highly noisy data tend to affect feature weights and the importance of linearly correlated features can be diluted.
+
+Permutation importance (PIMP) is a heuristic method used to correct the feature importance deviation measurement \citep{Altmann2010}. This method can be used to correct the bias of the feature importance calculated by RF with GI (Gini importance). PIMP is based on the permutation test. To preserve the relationship between features, the permutation of the result is used. In general, assuming that an algorithm is given, the correlation between a set of features and the response vector is evaluated. The PIMP algorithm performs $s$ random permutations on the response vector ($s$ is set to 100 in the experiment of this paper). For each permutation of the response vector, the importance of all predictors variables is evaluated. This produces $s$ importance measures for each feature, which we call \textit{null importances}. Comparing the difference between the actual importance when the response vector is not replaced and the null importances distribution, the true importance of the feature can be judged. The more actual importance exceeds and deviates from the null importances, the more important the feature is, and vice versa, the less important the feature is.
+
+The PIMP specific steps are as follows:
+\renewcommand{\theenumi}{\roman{enumi}}
+\begin{enumerate}
+    \item Create null importances distribution: These are created by running the fit model multiple times on a shuffle version of the target. This shows how the model can fit a feature without considering the target.
+    \item Fit the model on the original target and collect the actual feature importance. This gives a benchmark whose significance can be tested against the null importances distribution.
+    \item Calculate the degree of difference between actual importance and null importances distribution. Instead of using a complex approach in the original paper\footnote{The original paper fits a probability distribution to the population of null importances, which the user can choose from the following: Gaussian, lognormal or gamma. Maximum likelihood estimators of the parameters of the selected distribution are computed. Given the fitted distribution, the probability of observing a relevance of $v$ or higher using the true response vector can be computed (PIMP \textit{P}-value).}, we use a simple method. Three-quarters of the null importances distribution is used as an overall estimate. Specifically, we use the log value of the actual feature importance divided by the 75 percentile of null importances distribution to score features (formula \ref{equ_1}). This will give a sense of the modified feature importance that allows seeing the main features in the data set. 75 percentile is an empirical value. Other quantiles like 50, 95, 99, was also tried and found little effect on the final ranking of feature importance. A small number of features have changed slightly in the rankings, but the overall trend is unchanged.
+    \begin{equation} \label{equ_1}
+        score_{PIMP} = log \frac{1^{-10} + Importance_{actual}}{1 + percentile(Importance_{null}, 75)} \footnote{Actual importance can be zero, to avoid log of zero, $1^{-10}$ is added to the numerator. For similar reason, 1 is added to the denominator to avoid division by zero.}
+    \end{equation}
+\end{enumerate}
+
+Permutation importance has several advantages. First, the dependence between predictor variables remains constant. Second, the number of permutations can be much smaller than the number of predictor predictors. Third, the method is general in that it can be used with any generative feature importance measure (biased or unbiased).
+
+\section{Financial distress prediction model: PIMP-XGBoost}
+\label{section_3}
+This paper proposes the PIMP-based financial distress prediction models PIMP-XGBoost. The whole flowchart is shown in Figure \ref{fig: flowchart}. The process can be divided into three steps: data preprocessing, feature selection based on the RF wrapper and PIMP algorithm, and model training. The data preprocessing includes missing value filling and 0-1 normalization. After that, the RF wrapper feature selection algorithm paired with PIMP is applied to rank the feature importance scores and filter out the non-representative features. Finally, the selected features are used to train the model. This whole process will be discussed below.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{flowchart}
+    \caption{Flowchart of PIMP-based financial distress prediction model.}
+    \label{fig: flowchart}
+\end{figure}
+
+\textbf{Step 1.} Data pre-processing
+
+\textit{Filling missing values and 0–1 scaling}
+
+There are some missing values in the initial dataset, which need to be pre-processed. The missing value of a financial indicator of a sample company is filled by the median of that indicator among all samples. Besides, since different financial indicators usually have different value ranges, it is necessary to normalize the value ranges of each indicator to ensure the effectiveness of the financial distress prediction model. In this paper, the financial indicators are normalized according to the formula \ref{equ_2} so that the range of values of each financial indicator is kept between [0, 1]. Here, $V_{min}$ and $V_{max}$ are the minimum and maximum values of a financial indicator, respectively.
+
+\begin{equation} \label{equ_2}
+    V^{'}=\frac{V-V_{min}}{V_{max}-V_{min}}
+\end{equation}
+
+\textbf{Step 2.} PIMP-based feature selection
+
+\textit{Calculate the relative feature importance of the RF wrapper method and PIMP algorithm, then filter redundant features with the customized threshold value.}
+
+Feature selection ensures a fair comparison between the different methods, as benchmark models such as SVM and ANN are highly dependent on feature selection. RF can be a wrapper method that output the importance score of features, which is the metric to select feature subset. To make the whole process faster, LightGBM's ``rf'' mode is used. LightGBM offers two optional feature importance score standards: ``split'' and ``gain''. Specifically, ``split'' indicates the number of times a feature is used for segmentation; ``gain'' is the total reduction in error when a feature is used for segmentation, and the feature with a high importance score is regarded as a key variable. After using the RF wrapper method to obtain actual importance, PIMP is applied to obtain the distribution of null importances, which is further ranked for feature importance by comparing it with the actual importance. To discard useless features, different feature importance thresholds (top 5\%, 10\% ... 95\%, 100\%) are set to constitute the feature subsets. Afterward, 10 fold cross-validation is calculated respectively to select the best feature subset.
+
+The initial parameter settings of the RF wrapper method have a non-trivial impact on the relevance importance of the features. We follow the default settings for most parameters: learning rate = 0.1, subsample = 1 and colsample bytree = 1. Regarding the max tree depth, empirical results show that the max tree depth set to $0.2*N_{feature}$ performs better. Here, $N_{feature}$ refers to the number of features which is 44 in this paper. So max tree depth is set to 9.
+
+\textbf{Step 3.} Model training
+
+\textit{Tune the hyper-parameters of XGBoost and LIghtGBM and train the model with selected feature subset.}
+
+As mentioned earlier, XGBoost\footnote{\url{https://github.com/dmlc/xgboost}} and LightGBM\footnote{\url{https://github.com/microsoft/LightGBM}} are powerful classifiers with many hyperparameters that need to be carefully tuned. Specifically, GridSearchCV of scikit-learn\footnote{\url{https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV}} was used to search the hyperparameters. The optimal hyperparameters are summarized in \hyperref[supplementary_materials]{supplementary materials}.
+
+\section{Experimental set-up}
+\label{section_4}
+This section describes the experimental setup in detail, which is composed of three subsections, i.e. data collection, benchmark models and evaluation criteria.
+
+\subsection{Data collection}
+The sample data used in this paper came from the RESSET database\footnote{\url{https://www.resset.com}}. The database contains the accounting records and financial ratios of Chinese listed companies on the Shanghai and Shenzhen stock exchanges. The specific criteria that a company is in financial distress are: the company's net profit for two consecutive years is negative or the net assets of the most recent fiscal year is lower than the registered capital. As shown in Figure \ref{fig: Time window}, because of the lagging nature of the news announcement, the previous year the company officially announced that it had fallen into financial distress was marked as the standard year (T). The data used for forecasting are the financial ratios one (T-1), two (T-2), and three (T-3) years prior to financial distress.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Time window}
+    \caption{Time window for financial distress prediction.}
+    \label{fig: Time window}
+\end{figure}
+
+The period covered by the sample data of companies in financial distress is from 2001 to 2019. During this period, there were 4,167 listed companies on the Shanghai and Shenzhen exchanges, of which 716 had been in financial distress at least once and 3,451 had never been in financial distress. Some companies may have been marked as distress several times during the period, so the entire distressed samples are more than the number of companies. In order not to let the unbalanced dataset affect the performance of the model, a dataset with an equal number of positive and negative samples is constructed by using all financial distress samples and randomly selecting an equal number of normal company samples. The sample composition of the T-1, T-2, and T-3 dataset is shown in Table \ref{table: Statistics}.
+
+\begin{table}[H]
+    \centering
+    \caption{Statistics of datasets used in this paper}
+    \label{table: Statistics}
+    \begin{tabular}{llll}
+    \hline
+    dateset & financial distress & normal & all  \\ \hline
+    T-1     & 2168               & 2168   & 4366 \\
+    T-2     & 2168               & 2168   & 4366 \\
+    T-3     & 2167               & 2167   & 4364 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Benchmark models}
+\textbf{Logistic regression (LR):} LR has always been a popular method in financial distress forecasting \citep{Lessmann2015}. Compared to MDA, which has many restrictive assumptions (such as the requirement for normally distributed variables and sensitivity to outliers), LR has less restrictive assumptions and is therefore a popular alternative to multivariate models. Although LR is called "regression", it is a classification model, that is, there are only two output variables, representing two different classes respectively. LR produces results in the interval [0, 1], which can be interpreted as the probability that a given observation value is a specific group member. If the probability of the sample category being positive is greater than 0.5, the sample is considered to be positive, otherwise, it is negative.
+
+\textbf{Artificial neural network (ANN):} ANN is a powerful and widely used machine learning technique, which is a computational model inspired by the brain \citep{Kohonen1988}. ANNs generally consist of at least three layers of neurons, i.e., an input layer, a hidden layer, and an output layer. The hidden layer is intermediate between the input and output layer and there can be more than one layer. Each node in each layer is connected to all nodes in the neighboring layers, and the number of nodes in each layer is settable. The activation function between layers helps to capture the nonlinear relationship between the input data and the labels. The training process of ANN is divided into two phases, feedforward phase, and backpropagation phase. In the feedforward phase, the data is propagated forward from the input layer to the output layer. The obtained results are compared with the actual label values and the error is calculated. In the backpropagation phase, the weights of the neurons are updated based on the error results using optimization algorithms such as gradient descent.
+
+\textbf{Support vector machine (SVM):} SVM is another artificial intelligence technique used for financial distress prediction. The core of a support vector machine is the nonlinear transformation of the input vector into a high-dimensional feature space through a mapping function, which allows the data to be separated by a linear model \citep{Cortes1995}. The functions used to map the data are also called kernel functions, and the commonly used kernel functions are linear, polynomial, and radial basis. The SVM then searches for a separated hyperplane that maximizes the distance between different classes to guarantee good generalization ability. Based on the structured risk minimization principle, the SVM seeks an upper bound on the generalization error rather than the empirical error as in neural networks. Support vector machines require appropriate parameter tuning \citep{Huang2007}.
+
+\textbf{Decision tree (DT):} DT is a non-parametric data mining technique. The decision tree is a model of tree structure generated by the inductive reasoning method based on the data provided. According to the different criteria for selecting the optimal partition attribute, the decision tree can be classified into ID3, C4.5, and CART \citep{breiman1984classification}. The CART selects the optimal division attribute based on the GINI coefficient as a criterion. To avoid overfitting, pruning operation can be added into the learning of decision tree, which can be classified into pre-pruning and post-pruning according to the pruning operation time. Besides, decision trees can be used as a base classifier for ensemble learning. In 1985, decision trees were used to design financial distress models \citep{Frydman1985}.
+
+\textbf{Bagging:} Bagging is an ensemble learning method that generates multiple versions of the base classifier by bootstrap replication of the training data, and then aggregates the results of these base classifiers to obtain the final prediction \citep{Breiman1996}. Bagging obtains $K$ new datasets, equal in size to the original dataset, by selecting $K$ times from the original dataset. Each dataset is replaced by selecting random samples from the original dataset (which is then put back after sampling). Replacement here means that the same sample can be selected multiple times. This property allows for duplicate values in the new dataset, while some values from the original dataset no longer appear in the new dataset. After $K$ datasets have been constructed, a certain learning algorithm is applied to each dataset separately to obtain $K$ base classifiers. When classifying the new data, these $K$ base classifiers can be applied for classification. The category with the most votes from these base classifiers is used as the final classification result.
+
+\textbf{Adaptive Boosting (AdaBoost):} Similar to bagging, boosting is also an ensemble learning technique. However, different from the parallel mechanism of bagging, the different classifiers in boosting are obtained by serial training. Each new classifier is trained based on the performance of the trained classifiers. Boosting obtains new classifiers by focusing on those data that are misclassified by existing classifiers. Boosting classifies results based on the weighted sum of all classifiers. The classifier weights in bagging are equal, while those in boosting are not. Each weight represents the success of its corresponding classifier in the previous iteration. Boosting method has several versions, but in this paper, we will focus on just one of the most popular, AdaBoost \citep{Freund1995}.
+
+AdaBoost initializes the sample weights according to the size of the training set to satisfy a uniform distribution. The weights of the samples are changed after iterations of the algorithm, increasing if the samples are misclassified and decreasing if the weights are not. In the next iteration, AdaBoost will pay more attention to the difficult samples in the training sample set. AdaBoost further learns the misclassified samples to obtain the next weak classifier until the samples are correctly classified. When the specified number of iterations or the expected error rate is reached, the strong classifier is constructed.
+
+\textbf{Random Forests (RF):} RF is a type of bagging method, which is an ensemble learning algorithm \citep{Breiman2001}. RF takes the CART as the base classifier and extracts several different training sample sets with the bootstrap method. RF does not use all the features for attribute partitioning when training a single tree but selects partial features randomly. For the classification problem, the final result is obtained by majority voting; for the regression problem, the final result is obtained by simple averaging. Since multiple weak learners are integrated and the classification results combine the decision results of multiple trees, RF has good classification and generalization ability and has certain tolerance to noise.
+
+
+These benchmark models also require pre-set hyperparameters, the detailed settings can be obtained in the \hyperref[supplementary_materials]{supplementary materials}.
+
+\subsection{Evaluation criteria}
+Reasonable comparison of models requires the use of appropriate evaluation criteria. In the field of financial distress forecasting, overall accuracy (ACC), defined as the ratio of the number of correctly classified samples to the total sample size, is one of the most commonly used metrics. Besides, precision, recall, and f1 are also popular evaluation metrics. These metrics can be calculated based on formula \ref{equ_3} to formula \ref{equ_6}.
+
+\begin{equation} \label{equ_3}
+    ACC = \frac{TP+FN}{TP+FP+FN+TN}
+\end{equation}
+\begin{equation} \label{equ_4}
+    Precision = \frac{TP}{TP+FP}
+\end{equation}
+\begin{equation} \label{equ_5}
+    Recall = \frac{TP}{TP+FN}
+\end{equation}
+\begin{equation} \label{equ_6}
+    F1 = 2*\frac{Precision*Recall}{Precision+Recall}
+\end{equation}
+
+The confusion matrix consisting of TP, TN, FP, and FN in these formulas is shown in table \ref{table: 2}. Where TP and TN represent the numbers of correctly classified normal and financially distressed companies, respectively. FP and FN denote the numbers of misclassified normal and financially distressed companies, respectively.
+
+\begin{table}[H]
+    \centering
+    \caption{The confusion matrix.}
+    \label{table: 2}
+    \begin{tabular}{lll}
+    \hline
+    Actual Class                                                                  & Predicition Results &    \\ \cline{2-3}
+     & \begin{tabular}[c]{@{}l@{}}Positive class (Financial distress)\end{tabular} & \begin{tabular}[c]{@{}l@{}}Negative class (Financial normal)\end{tabular} \\ \hline
+    \begin{tabular}[c]{@{}l@{}}Positive class (Financial distress)\end{tabular} & TP                  & FN \\
+    \begin{tabular}[c]{@{}l@{}}Negative class (Financial normal)\end{tabular}   & FP                  & TN \\ \hline
+    \end{tabular}
+\end{table}
+
+The area under the curve (AUC) is an evaluation indicator based on the receiver operating characteristic (ROC) curve, which is equal to the area under the ROC curve. In the ROC curve, the true positive rate (TPR) and false positive rate (FPR) are plotted at different truncation values, and each point on the ROC curve represents a pair of TPR and FPR corresponding to a certain threshold. TPR and FPR can be calculated based on formula \ref{equ_7} and formula \ref{equ_8}.
+
+\begin{equation} \label{equ_7}
+    TPR = \frac{TP}{TP+FP}
+\end{equation}
+\begin{equation} \label{equ_8}
+    FPR = \frac{FP}{FP+TN}
+\end{equation}
+
+The AUC measures how well the model distinguishes between financially distressed and normal companies. The larger the AUC (the closer it is to 1), the better the model's classification performance. Specifically, the scikit-learn software package is used to calculate the AUC of all models on the validation set\footnote{\url{https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score}}.
+
+
+\section{Experimental results and analysis}
+\label{section_5}
+\subsection{Feature selection}
+Feature selection involves three steps. First of all, according to the experience of previous studies in China \citep{Chen2013, Sun2020, Zhu2019} and considering the multiple dimensions that affect the company's financial situation, 44 financial ratios are selected as initial characteristics. Second, the RF wrapper method is used to rank the importance of all the original features. Finally, the results obtained from the RF wrapper method are corrected by PIMP, and the optimal feature subset is selected to construct the financial distress prediction model.
+
+\subsubsection{Initial features}
+To construct the dataset of the empirical study, we take into account the use situation in the previous studies, the complete coverage of business operation, and the availability of data based on qualitative analysis. A preliminary selection of 44 financial indicators, including profitability, solvency, growth ability, operating ability, cash flow ability, and capital structure, as shown in Table \ref{table: 3}.
+
+\begin{table}[H]
+    \centering
+    \caption{Initial financial indicators.}
+    \label{table: 3}
+    \begin{tabular}{p{90pt}p{370pt}}
+    \midrule Types &
+      Variables and financial indicators \\
+    \midrule Profitability &
+      V1: Return On Equity, V2: Return On Assets, V3: Net Profit Ratio, V4: Net Profit To Total Operation Income, V5: Operating Profit To Total Operation Income, V6: Operating Profit Ratio, V7: Total Profit Cost Ratio \\
+    \midrule Solvency &
+      V8: Current Ratio, V9: Quick Ratio, V10: Equity To Interest Bear Debt, V11: Debt Tangible Equity Ratio, V12: Tangible Asset To Interest Bear Debt, V13: Tangible Asset To Net Debt, V14: Net Asset Liability Ratio, V15: Net Liability Ratio \\
+    \midrule Growth ability &
+      V16: Operating Income Grow Rate, V17: Net Profit Grow Rate, V18: Net Operation Cash Flow Growth Rate, V19: Operation Cash Per Share Grow Rate, V20: Cash Increase Year Over Year, V21: Total Asset Year To Date Grow Rate \\
+    \midrule Operating capacity &
+      V22: Inventory Turning Rate, V23: Receivables Turnover Ratio, V24: Accrued Payable Rate, V25: Equity Rate, V26: Net Operating Cycle, V27: Working Capital Total Rate \\
+    \midrule Cash flow ability &
+      V28: Sales And Service Cash To Operating Income, V29: Cash Rate of Sales, V30: Operating Net Cash Flow To Operating Net Income, V31: Operating Income Cash Coverage, V32: Net Operating Cash Flow Ratio, V33: Net Investment Cash Flow Ratio, V34: Net Financial Cash Flow Ratio, V35: Net Operating Cash Flow To Total Operating Revenue \\
+    \midrule Structural ratios &
+        V36: Debt To Asset Ratio, V37: Current Asset To Total Asset, V38: Noncurrent Asset To Total Asset, V39: Intangible Asset Ratio, V40: Equity To Total Capital, V41: Interest Bear Debt To Total Capital, V42: Debt To Long Capital Ratio, V44: Capital Fixed Ratio \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{RF wrapper feature importance}
+The RF wrapper method is used to obtain the feature actual importance. Specifically, LightGBM’s ``rf'' mode is applied. LightGBM provides two feature importance measurement methods, namely ``split'' and ``gain''. If ``split'', the result contains number of times the feature is used in a model. If ``gain'', the result contains total gains of splits that use the feature.
+
+Figure \ref{fig: RF Wrapper Feature Importance} shows the feature importance ranking of the RF wrapper method in ``split'' and ``gain'' mode. For the T-1, T-2 dataset, the most important variable in both modes is V2. While for the T-3 dataset, V2 is ranked second in importance in the ``split'' mode and first in the ``gain'' mode. In general, V2 is the most important feature for predicting financial distress. In terms of specific financial indicators, V2 is the Return On Assets (net profit / average total assets), which is used to measure the net profit generated by each unit of assets. The importance of V2 is consistent with intuition. Besides, V1, V5, V16, V17, V21, V29 are all considered more important features by the RF wrapper method.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{RF wrapper feature importance}
+    \caption{RF wrapper feature importance.}
+    \label{fig: RF Wrapper Feature Importance}
+\end{figure}
+
+Although the RF wrapper method can get feature importance sorting. However, any feature with sufficient variance can be exploited by the tree model. You can always find segmentation that helps you score better. Besides, the RF wrapper method cannot reflect the true importance of the relevant features. The selected feature will be of great importance, while its related feature will be of diminishing importance.
+
+\subsubsection{Permutation importance}
+To cope with the shortcomings of the RF wrapper method, the PIMP method introduced in section \ref{section_2} is used to obtain the distribution of null importances and then correct the feature importance ranking by comparing it with the actual importance. Specifically, the importance of the obtained features is calculated using formula \ref{equ_1}. Figure \ref{fig: null vs actual (PIMP)} plots the distribution of null importances against the actual importance of the five most and least important features in the T-1 data. Among them, the first and second columns are the comparison graphs of the null importances distribution and actual importance of the 5 features with the lowest importance of PIMP features in the ``split'' and ``gain'' modes. The third and fourth columns are the comparison graphs of the null importances distribution and actual importance of the feature with the highest 5 importance of PIMP in the ``split'' and ``gain'' modes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{PIMP_5_5}
+    \caption{Comparison of null importances distribution and actual importance for the 5 least important features (column 1 and 2) and 5 most important features (column 3 and 4) using PIMP (T-1).}
+    \label{fig: null vs actual (PIMP)}
+\end{figure}
+
+As a comparison, instead of using the PIMP method, simply use the RF wrapper method to obtain the 5 most important and least important features of the T-1 data. The same image of the null importances distribution against the actual importance is plotted in figure \ref{fig: null vs actual (RF wrapper)}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{RF_wrapper_5_5}
+    \caption{Comparison of null importances distribution and actual importance for the 5 least important features (column 1 and 2) and 5 most important features (column 3 and 4) using RF wrapper (T-1).}
+    \label{fig: null vs actual (RF wrapper)}
+\end{figure}
+
+The power of the PIMP method is demonstrated in the above figure, where the RF wrapper method considers certain features to be of particularly high importance (e.g. V21, V29), but their actual relevance to the target is not so strong. Besides, PIMP can remove attenuation factors from related features and show their true (or unbiased) importance \citep{Altmann2010}.
+
+Figure \ref{fig: PIMP Feature Importance} is a schematic diagram of the PIMP feature importance ranking for the T-1, T-2, and T-3 dataset. As can be seen, the feature importance results for the T-1, T-2, and T-3 dataset used by companies to forecast financial distress have both similarities and differences. V1, V2, V5, and V6 are all important for the T-1, T-2, and T-3 dataset. Besides, V3, V4, V12, V41 are more important for the T-1 dataset, V3, V12, V16, V17 are more important for the T-2 dataset, and V8, V16, V17, V41 are more important for the T-3 dataset.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{PIMP feature importance}
+    \caption{PIMP feature importance.}
+    \label{fig: PIMP Feature Importance}
+\end{figure}
+
+Using the RF wrapper method alone or in combination with the PIMP will both result in feature importance ranking. Different feature importance thresholds (top 5\%, 10\%...95\%, 100\%) are set to select feature subsets respectively. These feature subsets are used to plot the schematic diagram of the AUC result variation of the LightGBM model. As shown in figure \ref{fig: RF wrapper vs PIMP 1} - \ref{fig: RF wrapper vs PIMP 3}, the LightGBM model achieves the best results on the T-1, T-2, and T-3 dataset using the PIMP algorithm in ``split'' mode, when constructing subsets with the top 70\%, 85\%, and 75\% importance features, respectively. Therefore, the top 30, 37, and 33 features in the corresponding T-1, T-2, and T-3 datasets are selected as the optimal feature subset for subsequent training of all other models.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{LightGBM results (T-1)}
+    \caption{LightGBM results using RF wrapper vs PIMP with different feature importance percentage thresholds (T-1).}
+    \label{fig: RF wrapper vs PIMP 1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{LightGBM results (T-2)}
+    \caption{LightGBM results using RF wrapper vs PIMP with different feature importance percentage thresholds (T-2).}
+    \label{fig: RF wrapper vs PIMP 2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{LightGBM results (T-3)}
+    \caption{LightGBM results using RF wrapper vs PIMP with different feature importance percentage thresholds (T-3).}
+    \label{fig: RF wrapper vs PIMP 3}
+\end{figure}
+
+Through the importance of features, the degree of contribution of the company's various capability dimensions to the task of predicting financial distress can also be discovered. Table \ref{table: company ability} shows the number of occurrences of the features in the optimal feature subset in each company's capability dimension and the average value of the PIMP feature importance in the ``split'' model. According to the average feature importance (AVGIMP) of each company's capability dimension, the company's profitability feature is the most important for predicting financial distress with T-1, T-2, and T-3 data. The features of growth ability are of little importance to T-1 data, but for T-2 and T-3 data, the importance is second only to profitability.
+
+\begin{table}[H]
+    \centering
+    \caption{Feature counts and average importance for each category. AVGIMP is the average value of the PIMP feature importance in the ``split'' model.}
+    \label{table: company ability}
+    \begin{tabular}{llllllll}
+    \hline
+    \multirow{2}{*}{Category} & \multirow{2}{*}{All} & \multicolumn{2}{l}{T-1} & \multicolumn{2}{l}{T-2} & \multicolumn{2}{l}{T-3} \\ \cline{3-8}
+     &  & Counts & AVGIMP & Counts & AVGIMP& Counts & AVGIMP \\ \hline
+    Profitability & 7 & 7 & 0.75 & 7 & 0.82 & 7 & 0.63 \\
+    Solvency & 8 & 5 & 0.27 & 6 & 0.36 & 6 & 0.31 \\
+    Growth ability & 6 & 6 & -0.02 & 5 & 0.51 & 5 & 0.5 \\
+    Operating capacity & 6 & 5 & -0.1 & 4 & 0.29 & 3 & 0.37 \\
+    Cash flow ratios & 8 & 6 & 0.13 & 3 & 0.21 & 4 & 0.23 \\
+    Structural ratios & 9 & 4 & 0.29 & 3 & 0.4 & 5 & 0.32 \\
+    All & 44 & 33 &  & 28 &  & 30 &  \\ \hline
+    \end{tabular}
+    \end{table}
+
+\subsection{Comparisons among different models}
+As shown in figure \ref{fig: Histogram of AUC 1} - \ref{fig: Histogram of AUC 3}, the optimal feature subset obtained from PIMP was used to train the gradient boosting tree and other baseline models respectively, and the AUC comparison results were plotted. It can be found that some machine learning models, such as LR, ANN, SVM, and DT, may improve or decrease their prediction results after using the PIMP algorithm. However, most of the ensemble learning models improve their accuracy after using the PIMP algorithm, except for AdaBoost applied to T-2 data. The AUC results of XGBoost on T-1, T-2, and T-3 datasets improved by 0.07\%, 0.36\%, and 0.25\% after using PIMP, respectively. This means that the model uses fewer features, but obtains better results.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Histogram (T-1)}
+    \caption{Histogram of AUC results with or without pimp for each model (T-1).}
+    \label{fig: Histogram of AUC 1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Histogram (T-2)}
+    \caption{Histogram of AUC results with or without pimp for each model (T-2).}
+    \label{fig: Histogram of AUC 2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Histogram (T-3)}
+    \caption{Histogram of AUC results with or without pimp for each model (T-3).}
+    \label{fig: Histogram of AUC 3}
+\end{figure}
+
+Besides, with the increase of predicted years, the accuracy of T-1, T-2 and T-3 dataset tend to decrease. For example, the AUC results of PIMP-LightGBM on T-1, T-2, and T-3 dataset were 92.68\%, 88.49\%, and 84.24\%, respectively. Compared to the T-1 data, the AUC results of PIMP-LightGBM for T-2 and T-3 data decreased by 4.19\% and 8.44\%, respectively, which is also consistent with the general intuition.
+
+Table \ref{Classification results 1} - \ref{Classification results 3} show all the comparative details of accuracy, precision, recall, f1 and AUC of each model. PIMP-XGBoost had the best performance, with AUC of 92.91\%, 88.97\%, and 85.01\% on the T-1, T-2, and T-3 dataset, respectively, all exceeding other baseline models. Compared with the commonly used LR model, the AUC results of XGBoost improved by 6.40\%, 6.02\%, and 6.85\%, respectively.
+
+\begin{table}[H]
+    \centering
+    \caption{Classification results of T-1 dataset for 10 models using 10 fold cross validation.}
+    \label{Classification results 1}
+    \begin{tabular}{lllllllllll}
+    \hline
+    \multirow{2}{*}{Model} & \multicolumn{2}{l}{Accuracy(\%)} & \multicolumn{2}{l}{Precision(\%)} & \multicolumn{2}{l}{Recall(\%)} & \multicolumn{2}{l}{F1(\%)} & \multicolumn{2}{l}{AUC(\%)} \\ \cline{2-11}
+     & no pimp & pimp & no pimp & pimp & no pimp & pimp & no pimp & pimp & no pimp & pimp \\ \hline
+    LR & 80.51 & 79.27 & 82.81 & 80.91 & 76.97 & 76.51 & 79.74 & 78.61 & {\ul 87.62} & 86.51 \\
+    ANN & 73.38 & 72.95 & 76.33 & 72.58 & 70.28 & 75.58 & 72.12 & 73.53 & {\ul 81.41} & {\ul 81.41} \\
+    SVM & 80.31 & 79.63 & 84.46 & 82.58 & 74.23 & 75.09 & 78.99 & 78.62 & {\ul 87.19} & 86.73 \\
+    DT & 81.84 & 81.84 & 84.12 & 84.12 & 78.62 & 78.62 & 81.19 & 81.19 & 89.73 & {\ul 89.78} \\
+    AdaBoost & 84.07 & 84.10 & 85.39 & 85.48 & 82.17 & 82.14 & 83.73 & 83.75 & 91.80 & {\ul 91.82} \\
+    Bagging & 84.79 & 85.04 & 85.94 & 86.10 & 83.15 & 83.56 & 84.51 & 84.79 & 92.38 & {\ul 92.49} \\
+    RF & 84.71 & 84.99 & 86.03 & 86.08 & 82.87 & 83.45 & 84.40 & 84.73 & 92.44 & {\ul 92.48} \\
+    GBDT & 85.13 & 85.09 & 85.98 & 85.80 & 83.96 & \textbf{84.08} & 84.93 & 84.91 & 92.69 & {\ul 92.74} \\
+    XGBoost & 85.20 & \textbf{85.42} & 86.15 & \textbf{86.47} & 83.87 & 83.97 & 84.97 & \textbf{85.18} & 92.84 & {\ul \textbf{92.91}} \\
+    LightGBM & 85.06 & 85.13 & 85.97 & 86.09 & 83.78 & 83.77 & 84.84 & 84.90 & 92.58 & {\ul 92.68} \\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{Classification results of T-2 dataset for 10 models using 10 fold cross validation.}
+    \label{Classification results 2}
+    \begin{tabular}{lllllllllll}
+    \hline
+    \multirow{2}{*}{Model} & \multicolumn{2}{l}{Accuracy(\%)} & \multicolumn{2}{l}{Precision(\%)} & \multicolumn{2}{l}{Recall(\%)} & \multicolumn{2}{l}{F1(\%)} & \multicolumn{2}{l}{AUC(\%)} \\ \cline{2-11}
+     & no pimp & pimp & no pimp & pimp & no pimp & pimp & no pimp & pimp & no pimp & pimp \\ \hline
+    LR & 75.22 & 75.96 & 74.07 & 75.35 & 77.57 & 77.14 & 75.75 & 76.20 & 82.31 & {\ul 82.95} \\
+    ANN & 69.85 & 68.50 & 74.85 & 73.86 & 60.29 & 61.45 & 66.39 & 65.09 & 77.90 & {\ul 78.31} \\
+    SVM & 73.69 & 74.95 & 72.26 & 74.31 & 76.82 & 76.23 & 74.45 & 75.23 & 80.95 & {\ul 81.98} \\
+    DT & 75.63 & 75.59 & 77.00 & 77.01 & 73.08 & 72.97 & 74.93 & 74.87 & {\ul 83.58} & 83.52 \\
+    AdaBoost & 79.15 & 78.79 & 79.24 & 78.90 & 78.97 & 78.58 & 79.09 & 78.72 & {\ul 86.91} & 86.77 \\
+    Bagging & 80.31 & 80.57 & 79.53 & 79.70 & 81.57 & 82.00 & 80.53 & 80.82 & 87.93 & {\ul 88.12} \\
+    RF & 80.18 & 80.12 & 79.30 & 79.10 & 81.64 & 81.83 & 80.44 & 80.43 & 87.78 & {\ul 88.00} \\
+    GBDT & 80.32 & 80.77 & 79.40 & 79.50 & 81.84 & \textbf{82.85} & 80.59 & \textbf{81.14} & 88.39 & {\ul 88.82} \\
+    XGBoost & 80.68 & \textbf{80.97} & 80.01 & \textbf{80.30} & 81.74 & 82.01 & 80.86 & \textbf{81.14} & 88.61 & {\ul \textbf{88.97}} \\
+    LightGBM & 80.37 & 80.46 & 79.72 & 79.89 & 81.39 & 81.35 & 80.54 & 80.61 & 88.32 & {\ul 88.49} \\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{Classification results of T-3 dataset for 10 models using 10 fold cross validation.}
+    \label{Classification results 3}
+    \begin{tabular}{lllllllllll}
+    \hline
+    \multirow{2}{*}{Model} & \multicolumn{2}{l}{Accuracy(\%)} & \multicolumn{2}{l}{Precision(\%)} & \multicolumn{2}{l}{Recall(\%)} & \multicolumn{2}{l}{F1(\%)} & \multicolumn{2}{l}{AUC(\%)} \\ \cline{2-11}
+     & no pimp & pimp & no pimp & pimp & no pimp & pimp & no pimp & pimp & no pimp & pimp \\ \hline
+    LR & 71.84 & 71.34 & 70.91 & 70.51 & 73.85 & 73.12 & 72.31 & 71.75 & {\ul 78.64} & 78.16 \\
+    ANN & 65.87 & 66.35 & 67.87 & 69.22 & 63.66 & 62.03 & 63.97 & 63.75 & 73.32 & {\ul 73.99} \\
+    SVM & 71.76 & 71.01 & 69.50 & 68.93 & 77.37 & 76.32 & 73.19 & 72.38 & {\ul 79.00} & 78.27 \\
+    DT & 70.37 & 70.43 & 69.43 & 69.46 & 72.64 & 72.80 & 70.92 & 71.01 & 78.03 & {\ul 78.10} \\
+    AdaBoost & 75.29 & 75.19 & 74.88 & 74.78 & 75.85 & 75.76 & 75.35 & 75.26 & 82.81 & {\ul 82.85} \\
+    Bagging & 76.68 & 76.93 & 75.66 & 75.90 & 78.44 & 78.70 & 77.01 & 77.26 & 84.00 & {\ul 84.19} \\
+    RF & 76.33 & 76.61 & 75.44 & 75.51 & 77.91 & 78.55 & 76.63 & 76.99 & 83.87 & {\ul 84.11} \\
+    GBDT & 76.86 & 77.09 & 75.75 & 75.82 & 79.24 & \textbf{79.51} & 77.50 & \textbf{77.65} & 84.65 & {\ul 84.81} \\
+    XGBoost & 77.09 & \textbf{77.20} & 75.88 & \textbf{75.90} & 78.82 & 79.38 & 77.23 & 77.54 & 84.76 & {\ul \textbf{85.01}} \\
+    LightGBM & 76.16 & 76.52 & 75.27 & 75.63 & 77.75 & 78.05 & 76.46 & 76.80 & 84.10 & {\ul 84.24} \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Partial dependence plot}
+The PIMP algorithm can get the importance of each feature, but it cannot show the more complicated marginal effect between the feature and the predicted result. Partial dependence plot (PDP or PD for short) can show the marginal effect of one or two features on the prediction results of machine learning models \citep{Hastie2009}. The partial dependency function is defined as
+
+\begin{equation} \label{equ_9}
+    \hat{f}_{x_{S}}\left(x_{S}\right)=E_{x_{C}}\left[\hat{f}\left(x_{S}, x_{C}\right)\right]=\int \hat{f}\left(x_{S}, x_{C}\right) d \mathbb{P}\left(x_{C}\right)
+\end{equation}
+
+$X_{S}$ is the feature whose part of the dependent function should be drawn, and $X_{C}$ is the other feature used in the machine learning model $\hat{f}$. Usually, there are only one or two features in the set $S$. The features in $S$ are those for which we want to understand its impact on the prediction. The eigenvectors $X_{S}$ and $X_{C}$ are combined to form the total eigenspace $x$. Partial dependence works by marginalizing the machine learning model output on the feature distribution in set $C$. Therefore, this function shows the relationship between the features in the set $S$ we are interested in and the predicted results. By marginalizing the other features, functions that only depend on the features in $S$ and their interactions with the other features are obtained.
+
+The partial dependence function $\hat{f}_{x_{S}}$ is estimated by calculating the average value in the training data, also known as the Monte Carlo method
+
+\begin{equation} \label{equ_10}
+    \hat{f}_{x_{S}}\left(x_{S}\right)=\frac{1}{n} \sum_{i=1}^{n} \hat{f}\left(x_{S}, x_{C}^{(i)}\right)
+\end{equation}
+
+The partial dependence function tells us what the average marginal effect of the feature $X_{S}$ is on the prediction. In figure \ref{fig: pdp 1} - \ref{fig: pdp 3}, partial dependency graphs of the first five important features (V2, V5, V6, V1, V41) in three machine learning models, GBDT, XGBoost, and LightGBM are presented. It can be found that the partial dependence plot of these machine learning models have the same trend for the same features.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pdp (T-1)}
+    \caption{Partial dependence plot (T-1).}
+    \label{fig: pdp 1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pdp (T-2)}
+    \caption{Partial dependence plot (T-2).}
+    \label{fig: pdp 2}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pdp (T-3)}
+    \caption{Partial dependence plot (T-3).}
+    \label{fig: pdp 3}
+\end{figure}
+
+\section{Conclusion}
+\label{section_6}
+In this paper, a financial distress prediction model combining the gradient boosting tree technique with the PIMP feature importance ranking method is proposed, namely PIMP-XGBoost. The construction of PIMP-XGBoost consists of three steps: data preprocessing, feature importance ranking and filtering, and model training. The results of complex models can be analyzed effectively by using the feature importance ranking and partial dependency graph.
+
+This experiment is based on the balanced sample datasets of Chinese listed companies. The results show that the company’s profitability feature is the most important for predicting financial distress. Besides, the prediction performance of XGBoost exceeds other benchmark models. Combined with the PIMP feature importance ranking algorithm, the redundant features are removed, and the accuracy of the model is further improved. PIMP-XGBoost has high accuracy and interpretability, which allows it to be an effective tool for company decision-makers.
+
+In future research, first of all, non-financial indicators such as macroeconomic indicators and market indicators can be considered. Secondly, the original financial distress dataset is generally extremely unbalanced, and the number of companies in financial distress is far less than that of normal companies. How to deal with the sample imbalance can be explored.
+
+\section*{Acknowledgments}
+This work was supported by HuaRong RongTong (Beijing) Technology Co., Ltd. We acknowledge HuaRong RongTong (Beijing) for providing us high-performance machines for computation. We also acknowledge anonymous reviewers for proposing detailed modification advice to help us improve the quality of this manuscript.
+
+\section*{Supplementary materials}
+\label{supplementary_materials}
+Supplementary material associated with this article can be
+found, in the online version, at \url{https://github.com/qhykwsw/PIMP-XGBoost-Latex}
+
+\bibliography{sample}
+
+\end{document}
