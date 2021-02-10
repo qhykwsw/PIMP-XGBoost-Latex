@@ -34,8 +34,8 @@
     top=20mm,
 }
 
-\restylefloat{figure}
-\restylefloat{table}
+% \restylefloat{figure}
+% \restylefloat{table}
 
 \journal{Expert Systems with Applications}
 
@@ -51,7 +51,7 @@
 \begin{center}
 \vspace*{1cm}
 
-\textbf{ \large Financial distress prediction based on gradient boosted decision tree combined with a corrected feature importance measure}
+\textbf{ \large Financial distress prediction using a corrected feature selection measure and gradient boosted decision tree}
 
 \vspace{1.5cm}
 
@@ -77,7 +77,7 @@ Email: songyou@buaa.edu.cn
 \end{center}
 \end{titlepage}
 
-\title{Financial distress prediction based on gradient boosted decision tree combined with a corrected feature importance measure}
+\title{Financial distress prediction using a corrected feature selection measure and gradient boosted decision tree}
 
 \author[label1]{Hongyi Qian}
 \ead{qianhongyi@buaa.edu.cn}
@@ -187,7 +187,7 @@ Permutation importance has several advantages. First, the dependence between pre
 
 \section{Financial distress prediction model: PIMP-XGBoost}
 \label{section_3}
-This paper proposes the PIMP-based financial distress prediction models PIMP-XGBoost. The whole flowchart is shown in Figure \ref{fig: flowchart}. The process can be divided into three steps: data preprocessing, feature selection based on the RF wrapper and PIMP algorithm, and model training. The data preprocessing includes missing value filling and 0-1 normalization. After that, the RF wrapper feature selection algorithm paired with PIMP is applied to rank the feature importance scores and filter out the non-representative features. Finally, the selected features are used to train the model. This whole process will be discussed below.
+In this paper, the PIMP-based financial distress prediction model PIMP-XGBoost is proposed. The whole flowchart is shown in Figure \ref{fig: flowchart}. The process can be divided into three steps: data preprocessing, feature selection based on the RF wrapper and PIMP algorithm, and model training. The data preprocessing includes missing value filling and 0-1 normalization. After that, the RF wrapper feature selection algorithm paired with PIMP is applied to rank the feature importance scores and filter out the non-representative features. Finally, the selected features are used to train the model. This whole process will be discussed below.
 
 \begin{figure}[H]
     \centering
@@ -345,10 +345,10 @@ To construct the dataset of the empirical study, the use situation in the previo
     V32 & Net Operating Cash Flow Ratio & V33 & Net Investment Cash Flow Ratio \\
     V34 & Net Financial Cash Flow Ratio & V35 & Net Operating Cash Flow To Total Operating Revenue \\ \hline
     \multicolumn{4}{c}{Structural ratios} \\ \hline
-    V36 & Debt To Asset Ratio & V39 & Current Asset To Total Asset \\
-    V38 & Noncurrent Asset To Total Asset & V41 & Intangible Asset Ratio \\
-    V40 & Equity To Total Capital & V43 & Interest Bear Debt To Total Capital \\
-    V42 & Equity Multiplier & V45 & Debt To Long Capital Ratio \\
+    V36 & Debt To Asset Ratio & V37 & Current Asset To Total Asset \\
+    V38 & Noncurrent Asset To Total Asset & V39 & Intangible Asset Ratio \\
+    V40 & Equity To Total Capital & V41 & Interest Bear Debt To Total Capital \\
+    V42 & Equity Multiplier & V43 & Debt To Long Capital Ratio \\
     V44 & Capital Fixed Ratio &  &  \\ \hline
     \end{tabular}
 \end{table}
@@ -397,27 +397,13 @@ Figure \ref{fig: PIMP Feature Importance} is a schematic diagram of the PIMP fea
     \label{fig: PIMP Feature Importance}
 \end{figure}
 
-Using the RF wrapper method alone or in combination with the PIMP will both result in feature importance ranking. Different feature importance thresholds (top 5\%, 10\%...95\%, 100\%) are set to select feature subsets respectively. These feature subsets are used to plot the schematic diagram of the AUC result variation of the LightGBM model. As shown in figure \ref{fig: RF wrapper vs PIMP 1} - \ref{fig: RF wrapper vs PIMP 3}, the LightGBM model achieves the best results on the T-1, T-2, and T-3 dataset using the PIMP algorithm in ``split'' mode, when constructing subsets with the top 70\%, 85\%, and 75\% importance features, respectively. Therefore, the top 30, 37, and 33 features in the corresponding T-1, T-2, and T-3 datasets are selected as the optimal feature subset for subsequent training of all other models.
+Using the RF wrapper method alone or in combination with the PIMP will both result in feature importance ranking. Different feature importance thresholds (top 5\%, 10\%...95\%, 100\%) are set to select feature subsets respectively. These feature subsets are used to plot the schematic diagram of the AUC result variation of the LightGBM model. As shown in figure \ref{fig: RF wrapper vs PIMP}, the LightGBM model achieves the best results on the T-1, T-2, and T-3 dataset using the PIMP algorithm in ``split'' mode, when constructing subsets with the top 70\%, 85\%, and 75\% importance features, respectively. Feature selection does improve the accuracy of the model compared to using all features (the threshold is set to 100\%). Therefore, the top 30, 37, and 33 features in the corresponding T-1, T-2, and T-3 datasets are selected as the optimal feature subset for subsequent training of all other models.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{LightGBM results (T-1)}
-    \caption{LightGBM results using RF wrapper vs PIMP with different feature importance percentage thresholds (T-1).}
-    \label{fig: RF wrapper vs PIMP 1}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{LightGBM results (T-2)}
-    \caption{LightGBM results using RF wrapper vs PIMP with different feature importance percentage thresholds (T-2).}
-    \label{fig: RF wrapper vs PIMP 2}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{LightGBM results (T-3)}
-    \caption{LightGBM results using RF wrapper vs PIMP with different feature importance percentage thresholds (T-3).}
-    \label{fig: RF wrapper vs PIMP 3}
+    \includegraphics[width=\textwidth]{LightGBM results}
+    \caption{LightGBM results using RF wrapper vs PIMP with different feature importance percentage thresholds.}
+    \label{fig: RF wrapper vs PIMP}
 \end{figure}
 
 Through the importance of features, the degree of contribution of the company's various capability dimensions to the task of predicting financial distress can also be discovered. Table \ref{table: company ability} shows the number of occurrences of the features in the optimal feature subset in each company's capability dimension and the average value of the PIMP feature importance in the ``split'' model. According to the average feature importance (AVGIMP) of each company's capability dimension, the company's profitability feature is the most important for predicting financial distress with T-1, T-2, and T-3 data. The features of growth ability are of little importance to T-1 data, but for T-2 and T-3 data, the importance is second only to profitability.
@@ -428,15 +414,14 @@ Through the importance of features, the degree of contribution of the company's 
     \label{table: company ability}
     \begin{tabular}{llllllll}
     \hline
-    \multirow{2}{*}{Category} & \multirow{2}{*}{All} & \multicolumn{2}{l}{T-1} & \multicolumn{2}{l}{T-2} & \multicolumn{2}{l}{T-3} \\ \cline{3-8}
+    \multirow{2}{*}{Category} & \multirow{2}{*}{All counts} & \multicolumn{2}{l}{T-1} & \multicolumn{2}{l}{T-2} & \multicolumn{2}{l}{T-3} \\ \cline{3-8}
      &  & Counts & AVGIMP & Counts & AVGIMP& Counts & AVGIMP \\ \hline
     Profitability & 7 & 7 & 0.75 & 7 & 0.82 & 7 & 0.63 \\
     Solvency & 8 & 5 & 0.27 & 6 & 0.36 & 6 & 0.31 \\
     Growth ability & 6 & 6 & -0.02 & 5 & 0.51 & 5 & 0.5 \\
     Operating capacity & 6 & 5 & -0.1 & 4 & 0.29 & 3 & 0.37 \\
     Cash flow ratios & 8 & 6 & 0.13 & 3 & 0.21 & 4 & 0.23 \\
-    Structural ratios & 9 & 4 & 0.29 & 3 & 0.4 & 5 & 0.32 \\
-    All & 44 & 33 &  & 28 &  & 30 &  \\ \hline
+    Structural ratios & 9 & 4 & 0.29 & 3 & 0.4 & 5 & 0.32 \\ \hline
     \end{tabular}
     \end{table}
 
